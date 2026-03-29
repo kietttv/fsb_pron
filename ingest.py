@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterator, List, Optional
 import librosa
 from tqdm.auto import tqdm
 
-from fsb_pron.config import DATASET_PATHS
+from fsb_pron.config import DATASET_PATHS, SplitConfig
 from fsb_pron.phoneme_utils import phones_from_textgrid_label
 from fsb_pron.textgrid import load_textgrid_intervals, pick_textgrid_for_utterance
 
@@ -214,6 +214,7 @@ def build_manifest(
     max_libri: Optional[int] = None,
     show_progress: bool = True,
     assign_splits: bool = True,
+    split_cfg: Optional[SplitConfig] = None,
 ) -> List[ManifestRecord]:
     l2_root = l2_root or DATASET_PATHS["l2_arctic"]
     librispeech_root = librispeech_root or DATASET_PATHS["librispeech"]
@@ -235,7 +236,7 @@ def build_manifest(
     if assign_splits:
         from fsb_pron.splits import apply_splits_to_records
 
-        apply_splits_to_records(records)
+        apply_splits_to_records(records, split_cfg)
 
     os.makedirs(os.path.dirname(out_jsonl) or ".", exist_ok=True)
     it_write = tqdm(records, desc="Writing manifest") if show_progress else records

@@ -29,7 +29,12 @@ def assign_split_role(
     cfg = cfg or SplitConfig()
     if record.corpus == "librispeech":
         return "finetune"
-    r = _speaker_bucket(record.speaker)
+    key = (
+        record.speaker
+        if cfg.l2_stratify == "speaker"
+        else f"{record.speaker}:{record.utterance_id}"
+    )
+    r = _speaker_bucket(key)
     if r < cfg.frac_l2_finetune:
         return "l2_finetune"
     if r < cfg.frac_l2_calibration:

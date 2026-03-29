@@ -31,8 +31,11 @@ class ThresholdConfig:
 
 @dataclass(frozen=True)
 class SplitConfig:
-    """L2 speaker buckets: finetune mix vs threshold calibration vs PCC eval (no overlap by speaker)."""
+    """L2 buckets for finetune / calibration / PCC hold-out."""
 
-    # Cumulative proportions on hash bucket [0, 1) per speaker id
+    # Cumulative proportions on hash bucket [0, 1)
     frac_l2_finetune: float = 0.60
     frac_l2_calibration: float = 0.80  # up to this after finetune slice; rest = pcc
+    # "speaker": same speaker → same split (speaker-disjoint eval). "utterance": hash speaker+utt
+    # (needed when manifest has only 1–2 L2 speakers, else one bucket may stay empty).
+    l2_stratify: str = "utterance"
