@@ -45,6 +45,46 @@ def _read_l2_transcript(speaker_dir: str, utt_id: str) -> str:
     return ""
 
 
+def resolve_l2_arctic_data_root(root: str, max_depth: int = 5) -> str:
+    """
+    Kaggle / zip thường thêm 1+ cấp thư mục (vd. l2-arctic/L2-ARCTIC/...).
+    Trả về thư mục nông nhất có layout SPEAKER/wav/ chứa .wav.
+    """
+    if not os.path.isdir(root):
+        return root
+
+    def is_l2_speaker_tree(r: str) -> bool:
+        try:
+            for name in os.listdir(r):
+                sp = os.path.join(r, name)
+                if os.path.isdir(sp) and os.path.isdir(os.path.join(sp, "wav")):
+                    return True
+        except OSError:
+            pass
+        return False
+
+    if is_l2_speaker_tree(root):
+        return root
+
+    frontier = [root]
+    for depth in range(max_depth + 1):
+        next_frontier: List[str] = []
+        for r in frontier:
+            if is_l2_speaker_tree(r):
+                return r
+            if depth >= max_depth:
+                continue
+            try:
+                for name in sorted(os.listdir(r)):
+                    sub = os.path.join(r, name)
+                    if os.path.isdir(sub):
+                        next_frontier.append(sub)
+            except OSError:
+                pass
+        frontier = next_frontier
+    return root
+
+
 def ensure_nltk_for_g2p() -> None:
     """Download NLTK data used by g2p_en (pos_tag). Safe to call repeatedly."""
     try:
@@ -67,11 +107,12 @@ def iter_l2_arctic_records(
     root: str,
     *,
     min_duration: float = 0.5,
-    max_duration: float = 10.0,
+    max_duration: float = 15.0,
     prefer_annotation: bool = False,
 ) -> Iterator[ManifestRecord]:
     if not os.path.isdir(root):
         return
+    root = resolve_l2_arctic_data_root(root)
     for speaker in sorted(os.listdir(root)):
         sp_dir = os.path.join(root, speaker)
         if not os.path.isdir(sp_dir):

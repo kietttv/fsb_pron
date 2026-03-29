@@ -54,13 +54,20 @@ def pick_textgrid_for_utterance(
     """Return path to TextGrid if present (L2-ARCTIC layout: textgrid/ or annotation/)."""
     import os
 
-    sub = "annotation" if prefer_annotation else "textgrid"
-    p = os.path.join(speaker_dir, sub, f"{utt_id}.TextGrid")
-    if os.path.isfile(p):
-        return p
-    alt = os.path.join(
-        speaker_dir, "annotation" if sub == "textgrid" else "textgrid", f"{utt_id}.TextGrid"
+    order = (
+        ("annotation", "textgrid") if prefer_annotation else ("textgrid", "annotation")
     )
-    if os.path.isfile(alt):
-        return alt
+    names = (
+        f"{utt_id}.TextGrid",
+        f"{utt_id}.textgrid",
+        f"{utt_id}.TEXTGRID",
+    )
+    for sub in order:
+        tier_dir = os.path.join(speaker_dir, sub)
+        if not os.path.isdir(tier_dir):
+            continue
+        for fn in names:
+            p = os.path.join(tier_dir, fn)
+            if os.path.isfile(p):
+                return p
     return None
