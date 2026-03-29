@@ -45,6 +45,24 @@ def _read_l2_transcript(speaker_dir: str, utt_id: str) -> str:
     return ""
 
 
+def ensure_nltk_for_g2p() -> None:
+    """Download NLTK data used by g2p_en (pos_tag). Safe to call repeatedly."""
+    try:
+        import nltk
+    except ImportError:
+        return
+    for pkg in (
+        "averaged_perceptron_tagger_eng",
+        "averaged_perceptron_tagger",
+        "punkt",
+        "punkt_tab",
+    ):
+        try:
+            nltk.download(pkg, quiet=True)
+        except Exception:
+            pass
+
+
 def iter_l2_arctic_records(
     root: str,
     *,
@@ -167,6 +185,7 @@ def build_manifest(
     records.extend(l2_it)
 
     if g2p_engine is not None:
+        ensure_nltk_for_g2p()
         lib_it = list(iter_librispeech_records(librispeech_root, g2p=g2p_engine))
         if max_libri is not None:
             lib_it = lib_it[:max_libri]
