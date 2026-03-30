@@ -1,4 +1,5 @@
 """CTC vocab from manifest phoneme strings."""
+# Test
 
 from __future__ import annotations
 
